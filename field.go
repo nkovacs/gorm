@@ -52,23 +52,29 @@ func (field *Field) Set(value interface{}) error {
 	return nil
 }
 
+func (scope *Scope) fieldsInternal(modelStruct *ModelStruct) map[string]*Field {
+	fields := map[string]*Field{}
+	structFields := modelStruct.StructFields
+
+	indirectValue := scope.IndirectValue()
+	isStruct := indirectValue.Kind() == reflect.Struct
+	for _, structField := range structFields {
+		if isStruct {
+			fields[structField.DBName] = getField(indirectValue, structField)
+		} else {
+			fields[structField.DBName] = &Field{StructField: structField, IsBlank: true}
+		}
+	}
+	// modelStruct is incomplete, so we can't save it into scope.fields yet.
+	return fields
+}
+
 // Fields get value's fields
 func (scope *Scope) Fields() map[string]*Field {
+	scope.fieldsMx.Lock()
+	defer scope.fieldsMx.Unlock()
 	if scope.fields == nil {
-		fields := map[string]*Field{}
-		structFields := scope.GetStructFields()
-
-		indirectValue := scope.IndirectValue()
-		isStruct := indirectValue.Kind() == reflect.Struct
-		for _, structField := range structFields {
-			if isStruct {
-				fields[structField.DBName] = getField(indirectValue, structField)
-			} else {
-				fields[structField.DBName] = &Field{StructField: structField, IsBlank: true}
-			}
-		}
-
-		scope.fields = fields
+		scope.fields = scope.fieldsInternal(scope.GetModelStruct())
 	}
 	return scope.fields
 }

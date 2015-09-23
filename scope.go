@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
+	"sync"
 	"time"
 
 	"reflect"
@@ -17,14 +18,18 @@ type Scope struct {
 	SqlVars         []interface{}
 	db              *DB
 	indirectValue   *reflect.Value
+	indirectValueMx sync.Mutex
 	instanceId      string
 	primaryKeyField *Field
 	skipLeft        bool
 	fields          map[string]*Field
+	fieldsMx        sync.Mutex
 	selectAttrs     *[]string
 }
 
 func (scope *Scope) IndirectValue() reflect.Value {
+	scope.indirectValueMx.Lock()
+	defer scope.indirectValueMx.Unlock()
 	if scope.indirectValue == nil {
 		value := reflect.Indirect(reflect.ValueOf(scope.Value))
 		if value.Kind() == reflect.Ptr {
@@ -118,24 +123,33 @@ func (scope *Scope) HasError() bool {
 	return scope.db.Error != nil
 }
 
-func (scope *Scope) PrimaryFields() []*Field {
+func (scope *Scope) primaryFieldsInternal(modelStruct *ModelStruct) []*Field {
 	var fields = []*Field{}
-	for _, field := range scope.GetModelStruct().PrimaryFields {
-		fields = append(fields, scope.Fields()[field.DBName])
+	for _, field := range modelStruct.PrimaryFields {
+		fields = append(fields, scope.fieldsInternal(modelStruct)[field.DBName])
 	}
 	return fields
 }
 
-func (scope *Scope) PrimaryField() *Field {
-	if primaryFields := scope.GetModelStruct().PrimaryFields; len(primaryFields) > 0 {
+func (scope *Scope) PrimaryFields() []*Field {
+	return scope.primaryFieldsInternal(scope.GetModelStruct())
+}
+
+func (scope *Scope) primaryFieldInternal(modelStruct *ModelStruct) *Field {
+	if primaryFields := modelStruct.PrimaryFields; len(primaryFields) > 0 {
+		fields := scope.fieldsInternal(modelStruct)
 		if len(primaryFields) > 1 {
-			if field, ok := scope.Fields()["id"]; ok {
+			if field, ok := fields["id"]; ok {
 				return field
 			}
 		}
-		return scope.Fields()[primaryFields[0].DBName]
+		return fields[primaryFields[0].DBName]
 	}
 	return nil
+}
+
+func (scope *Scope) PrimaryField() *Field {
+	return scope.primaryFieldInternal(scope.GetModelStruct())
 }
 
 // PrimaryKey get the primary key's column name
@@ -299,13 +313,17 @@ func (scope *Scope) CombinedConditionSql() string {
 		scope.havingSql() + scope.orderSql() + scope.limitSql() + scope.offsetSql()
 }
 
-func (scope *Scope) FieldByName(name string) (field *Field, ok bool) {
-	for _, field := range scope.Fields() {
+func (scope *Scope) fieldByNameInternal(name string, modelStruct *ModelStruct) (field *Field, ok bool) {
+	for _, field := range scope.fieldsInternal(modelStruct) {
 		if field.Name == name || field.DBName == name {
 			return field, true
 		}
 	}
 	return nil, false
+}
+
+func (scope *Scope) FieldByName(name string) (field *Field, ok bool) {
+	return scope.fieldByNameInternal(name, scope.GetModelStruct())
 }
 
 // Raw set sql
