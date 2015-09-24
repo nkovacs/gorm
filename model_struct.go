@@ -131,7 +131,7 @@ func (scope *Scope) getModelStructInternal(full bool) *ModelStruct {
 		}
 		return value
 	}
-	// we have an excludive lock on the map, insert a modelstruct now, but add to its waitgroups,
+	// we have an exclusive lock on the map, insert a modelstruct now, but add to its waitgroups,
 	// then unlock the map so other structs can be inserted
 	modelStruct.partial.Add(1)
 	modelStruct.full.Add(1)
