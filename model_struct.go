@@ -32,8 +32,8 @@ type ModelStruct struct {
 	StructFields     []*StructField
 	ModelType        reflect.Type
 	defaultTableName string
-	partial          sync.WaitGroup
-	full             sync.WaitGroup
+	partial          *sync.WaitGroup
+	full             *sync.WaitGroup
 }
 
 func (s ModelStruct) TableName(db *DB) string {
@@ -90,6 +90,10 @@ func (scope *Scope) GetModelStruct() *ModelStruct {
 
 func (scope *Scope) getModelStructInternal(full bool) *ModelStruct {
 	var modelStruct ModelStruct
+	// these have to be pointers, to avoid copying them when calling
+	// methods on value
+	modelStruct.full = &sync.WaitGroup{}
+	modelStruct.partial = &sync.WaitGroup{}
 
 	reflectValue := reflect.Indirect(reflect.ValueOf(scope.Value))
 	if !reflectValue.IsValid() {
