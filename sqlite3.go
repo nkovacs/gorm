@@ -3,7 +3,6 @@ package gorm
 import (
 	"fmt"
 	"reflect"
-	"time"
 )
 
 type sqlite3 struct {
@@ -32,11 +31,11 @@ func (sqlite3) SqlTag(value reflect.Value, size int, autoIncrease bool) string {
 		}
 		return "text"
 	case reflect.Struct:
-		if _, ok := value.Interface().(time.Time); ok {
+		if isTimeType(value) {
 			return "datetime"
 		}
 	default:
-		if _, ok := value.Interface().([]byte); ok {
+		if isByteArrayOrSlice(value) {
 			return "blob"
 		}
 	}

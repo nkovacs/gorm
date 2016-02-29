@@ -3,7 +3,6 @@ package gorm
 import (
 	"fmt"
 	"reflect"
-	"time"
 )
 
 type mssql struct {
@@ -36,11 +35,11 @@ func (mssql) SqlTag(value reflect.Value, size int, autoIncrease bool) string {
 		}
 		return "text"
 	case reflect.Struct:
-		if _, ok := value.Interface().(time.Time); ok {
+		if isTimeType(value) {
 			return "datetime2"
 		}
 	default:
-		if _, ok := value.Interface().([]byte); ok {
+		if isByteArrayOrSlice(value) {
 			if size > 0 && size < 65532 {
 				return fmt.Sprintf("varchar(%d)", size)
 			}

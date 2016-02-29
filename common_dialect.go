@@ -42,11 +42,11 @@ func (commonDialect) SqlTag(value reflect.Value, size int, autoIncrease bool) st
 		}
 		return "VARCHAR(65532)"
 	case reflect.Struct:
-		if _, ok := value.Interface().(time.Time); ok {
+		if isTimeType(value) {
 			return "TIMESTAMP"
 		}
 	default:
-		if _, ok := value.Interface().([]byte); ok {
+		if isByteArrayOrSlice(value) {
 			if size > 0 && size < 65532 {
 				return fmt.Sprintf("BINARY(%d)", size)
 			}
@@ -114,4 +114,19 @@ func (commonDialect) RawScanString(scope *Scope, scanPtr *string, query string, 
 func (commonDialect) CurrentDatabase(scope *Scope) (name string) {
 	scope.Err(scope.NewDB().Raw("SELECT DATABASE()").Row().Scan(&name))
 	return
+}
+
+var timeType = reflect.TypeOf(time.Time{})
+var byteSliceType = reflect.TypeOf([]byte{})
+
+func isTimeType(value reflect.Value) bool {
+	return value.Type().ConvertibleTo(timeType)
+}
+
+func isByteSliceType(value reflect.Value) bool {
+	return value.Type().ConvertibleTo(byteSliceType)
+}
+
+func isByteArrayOrSlice(value reflect.Value) bool {
+	return (value.Kind() == reflect.Array || value.Kind() == reflect.Slice) && value.Type().Elem() == byteType
 }

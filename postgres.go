@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"reflect"
 	"strings"
-	"time"
 
 	"github.com/lib/pq/hstore"
 )
@@ -45,7 +44,7 @@ func (postgres) SqlTag(value reflect.Value, size int, autoIncrease bool) string 
 		}
 		return "text"
 	case reflect.Struct:
-		if _, ok := value.Interface().(time.Time); ok {
+		if isTimeType(value) {
 			return "timestamp with time zone"
 		}
 	case reflect.Map:
@@ -63,10 +62,6 @@ func (postgres) SqlTag(value reflect.Value, size int, autoIncrease bool) string 
 }
 
 var byteType = reflect.TypeOf(uint8(0))
-
-func isByteArrayOrSlice(value reflect.Value) bool {
-	return (value.Kind() == reflect.Array || value.Kind() == reflect.Slice) && value.Type().Elem() == byteType
-}
 
 func isUUID(value reflect.Value) bool {
 	if value.Kind() != reflect.Array || value.Type().Len() != 16 {

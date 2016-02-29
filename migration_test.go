@@ -1,6 +1,7 @@
 package gorm_test
 
 import (
+	"encoding/json"
 	"fmt"
 	"testing"
 	"time"
@@ -94,17 +95,37 @@ func TestIndexes(t *testing.T) {
 	}
 }
 
+type MyTime time.Time
+
 type BigEmail struct {
 	Id           int64
 	UserId       int64
 	Email        string    `sql:"index:idx_email_agent"`
 	UserAgent    string    `sql:"index:idx_email_agent"`
 	RegisteredAt time.Time `sql:"unique_index"`
+	//CustomTime   MyTime          `sql:"type:timestamp"`
+	CustomData json.RawMessage `sql:"type:longblob"`
+	CreatedAt  time.Time
+	UpdatedAt  time.Time
+}
+
+type BigEmail2 struct {
+	Id           int64
+	UserId       int64
+	Email        string    `sql:"index:idx_email_agent"`
+	UserAgent    string    `sql:"index:idx_email_agent"`
+	RegisteredAt time.Time `sql:"unique_index"`
+	CustomTime   time.Time
+	CustomData   []byte
 	CreatedAt    time.Time
 	UpdatedAt    time.Time
 }
 
 func (b BigEmail) TableName() string {
+	return "emails"
+}
+
+func (b BigEmail2) TableName() string {
 	return "emails"
 }
 
@@ -114,7 +135,25 @@ func TestAutoMigration(t *testing.T) {
 		t.Errorf("Auto Migrate should not raise any error")
 	}
 
-	DB.Save(&BigEmail{Email: "jinzhu@example.org", UserAgent: "pc", RegisteredAt: time.Now()})
+	customData := json.RawMessage(`{"extra1": "foo", "extra2": bar}`)
+
+	/*
+		DB.Debug().Save(&BigEmail2{
+			Email:        "jinzhu@example.org",
+			UserAgent:    "pc",
+			RegisteredAt: time.Now(),
+			CustomTime:   time.Now(),
+			CustomData:   []byte(customData),
+		})
+	*/
+
+	DB.Debug().Save(&BigEmail{
+		Email:        "jinzhu@example.org",
+		UserAgent:    "pc",
+		RegisteredAt: time.Now(),
+		//CustomTime:   MyTime(time.Now()),
+		CustomData: customData,
+	})
 
 	scope := DB.NewScope(&BigEmail{})
 	if !scope.Dialect().HasIndex(scope, scope.TableName(), "idx_email_agent") {
@@ -127,7 +166,10 @@ func TestAutoMigration(t *testing.T) {
 
 	var bigemail BigEmail
 	DB.First(&bigemail, "user_agent = ?", "pc")
-	if bigemail.Email != "jinzhu@example.org" || bigemail.UserAgent != "pc" || bigemail.RegisteredAt.IsZero() {
+	if bigemail.Email != "jinzhu@example.org" || bigemail.UserAgent != "pc" ||
+		bigemail.RegisteredAt.IsZero() || /*time.Time(bigemail.CustomTime).IsZero() ||*/
+		string(bigemail.CustomData) != string(customData) {
+		t.Log(bigemail)
 		t.Error("Big Emails should be saved and fetched correctly")
 	}
 }

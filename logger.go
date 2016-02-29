@@ -43,9 +43,11 @@ func (logger Logger) Print(values ...interface{}) {
 				indirectValue := reflect.Indirect(reflect.ValueOf(value))
 				if indirectValue.IsValid() {
 					value = indirectValue.Interface()
-					if t, ok := value.(time.Time); ok {
+					if isTimeType(indirectValue) {
+						t := indirectValue.Convert(timeType).Interface().(time.Time)
 						formatedValues = append(formatedValues, fmt.Sprintf("'%v'", t.Format(time.RFC3339)))
-					} else if b, ok := value.([]byte); ok {
+					} else if isByteSliceType(indirectValue) {
+						b := indirectValue.Convert(byteSliceType).Interface().([]byte)
 						formatedValues = append(formatedValues, fmt.Sprintf("'%v'", string(b)))
 					} else if r, ok := value.(driver.Valuer); ok {
 						if value, err := r.Value(); err == nil && value != nil {

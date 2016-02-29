@@ -3,7 +3,6 @@ package gorm
 import (
 	"fmt"
 	"reflect"
-	"time"
 )
 
 type mysql struct {
@@ -42,11 +41,11 @@ func (mysql) SqlTag(value reflect.Value, size int, autoIncrease bool) string {
 		}
 		return "longtext"
 	case reflect.Struct:
-		if _, ok := value.Interface().(time.Time); ok {
+		if isTimeType(value) {
 			return "timestamp NULL"
 		}
 	default:
-		if _, ok := value.Interface().([]byte); ok {
+		if isByteArrayOrSlice(value) {
 			if size > 0 && size < 65532 {
 				return fmt.Sprintf("varbinary(%d)", size)
 			}

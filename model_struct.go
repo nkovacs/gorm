@@ -9,7 +9,6 @@ import (
 	"strconv"
 	"strings"
 	"sync"
-	"time"
 
 	"github.com/jinzhu/inflection"
 )
@@ -176,7 +175,7 @@ func (scope *Scope) GetModelStruct() *ModelStruct {
 				if _, isScanner := fieldValue.(sql.Scanner); isScanner {
 					// is scanner
 					field.IsScanner, field.IsNormal = true, true
-				} else if _, isTime := fieldValue.(*time.Time); isTime {
+				} else if indirectType.ConvertibleTo(timeType) {
 					// is time
 					field.IsNormal = true
 				} else if _, ok := field.TagSettings["EMBEDDED"]; ok || fieldStruct.Anonymous {
