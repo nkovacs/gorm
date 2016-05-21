@@ -1,5 +1,14 @@
 # use the default golang container from Docker Hub
 box: golang
+
+services:
+    mariadb:10.0
+    env:
+        MYSQL_DATABASE: gorm
+        MYSQL_USER: gorm
+        MYSQL_PASSWORD: gorm
+        MYSQL_RANDOM_ROOT_PASSWORD: "yes"
+
 # The steps that will be executed in the build pipeline
 build:
     # The steps that will be executed on build
@@ -31,7 +40,7 @@ build:
         - script:
                 name: test mysql
                 code: |
-                    GORM_DIALECT=mysql go test ./...
+                    GORM_DIALECT=mysql GORM_DBADDRESS=mariadb:3306 go test ./...
 
         - script:
                 name: test postgres
