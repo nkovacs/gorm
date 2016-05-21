@@ -2,12 +2,12 @@
 box: golang
 
 services:
-    mariadb:10.0
-    env:
-        MYSQL_DATABASE: gorm
-        MYSQL_USER: gorm
-        MYSQL_PASSWORD: gorm
-        MYSQL_RANDOM_ROOT_PASSWORD: "yes"
+    - id: mariadb
+      env:
+          MYSQL_DATABASE: gorm
+          MYSQL_USER: gorm
+          MYSQL_PASSWORD: gorm
+          MYSQL_RANDOM_ROOT_PASSWORD: "yes"
 
 # The steps that will be executed in the build pipeline
 build:
