@@ -8,6 +8,11 @@ services:
           MYSQL_USER: gorm
           MYSQL_PASSWORD: gorm
           MYSQL_RANDOM_ROOT_PASSWORD: "yes"
+    - id: postgres
+      env:
+          POSTGRES_USER: gorm
+          POSTGRES_PASSWORD: gorm
+          POSTGRES_DB: gorm
 
 # The steps that will be executed in the build pipeline
 build:
@@ -45,4 +50,4 @@ build:
         - script:
                 name: test postgres
                 code: |
-                    GORM_DIALECT=postgres go test ./...
+                    GORM_DIALECT=postgres GORM_DBHOST=postgres go test ./...
