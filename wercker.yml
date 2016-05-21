@@ -24,6 +24,16 @@ build:
 
         # Test the project
         - script:
-                name: go test
+                name: test sqlite
                 code: |
                     go test ./...
+
+        - script:
+                name: test mysql
+                code: |
+                    GORM_DIALECT=mysql go test ./...
+
+        - script:
+                name: test postgres
+                code: |
+                    GORM_DIALECT=postgres go test ./...
