@@ -2,7 +2,7 @@
 box: golang
 
 services:
-    - id: mariadb
+    - id: mariadb:10.0
       env:
           MYSQL_DATABASE: gorm
           MYSQL_USER: gorm
