@@ -42,6 +42,10 @@ func (commonDialect) Quote(key string) string {
 func (commonDialect) DataTypeOf(field *StructField) string {
 	var dataValue, sqlType, size, additionalType = ParseFieldStructForDialect(field)
 
+	if v, ok := field.TagSettings["AUTO_INCREMENT"]; ok && v == "FALSE" {
+		delete(field.TagSettings, "AUTO_INCREMENT")
+	}
+
 	if sqlType == "" {
 		switch dataValue.Kind() {
 		case reflect.Bool:

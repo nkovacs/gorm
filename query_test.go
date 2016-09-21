@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/nkovacs/gorm"
 	"github.com/jinzhu/now"
+	"github.com/nkovacs/gorm"
 
 	"testing"
 	"time"

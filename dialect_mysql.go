@@ -30,6 +30,12 @@ func (mysql) Quote(key string) string {
 func (mysql) DataTypeOf(field *StructField) string {
 	var dataValue, sqlType, size, additionalType = ParseFieldStructForDialect(field)
 
+	forceNoIncrement := false
+	if v, ok := field.TagSettings["AUTO_INCREMENT"]; ok && v == "FALSE" {
+		delete(field.TagSettings, "AUTO_INCREMENT")
+		forceNoIncrement = true
+	}
+
 	// MySQL allows only one auto increment column per table, and it must
 	// be a KEY column.
 	if _, ok := field.TagSettings["AUTO_INCREMENT"]; ok {
@@ -43,28 +49,28 @@ func (mysql) DataTypeOf(field *StructField) string {
 		case reflect.Bool:
 			sqlType = "boolean"
 		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32:
-			if _, ok := field.TagSettings["AUTO_INCREMENT"]; ok || field.IsPrimaryKey {
+			if _, ok := field.TagSettings["AUTO_INCREMENT"]; ok || !forceNoIncrement && field.IsPrimaryKey {
 				field.TagSettings["AUTO_INCREMENT"] = "AUTO_INCREMENT"
 				sqlType = "int AUTO_INCREMENT"
 			} else {
 				sqlType = "int"
 			}
 		case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uintptr:
-			if _, ok := field.TagSettings["AUTO_INCREMENT"]; ok || field.IsPrimaryKey {
+			if _, ok := field.TagSettings["AUTO_INCREMENT"]; ok || !forceNoIncrement && field.IsPrimaryKey {
 				field.TagSettings["AUTO_INCREMENT"] = "AUTO_INCREMENT"
 				sqlType = "int unsigned AUTO_INCREMENT"
 			} else {
 				sqlType = "int unsigned"
 			}
 		case reflect.Int64:
-			if _, ok := field.TagSettings["AUTO_INCREMENT"]; ok || field.IsPrimaryKey {
+			if _, ok := field.TagSettings["AUTO_INCREMENT"]; ok || !forceNoIncrement && field.IsPrimaryKey {
 				field.TagSettings["AUTO_INCREMENT"] = "AUTO_INCREMENT"
 				sqlType = "bigint AUTO_INCREMENT"
 			} else {
 				sqlType = "bigint"
 			}
 		case reflect.Uint64:
-			if _, ok := field.TagSettings["AUTO_INCREMENT"]; ok || field.IsPrimaryKey {
+			if _, ok := field.TagSettings["AUTO_INCREMENT"]; ok || !forceNoIncrement && field.IsPrimaryKey {
 				field.TagSettings["AUTO_INCREMENT"] = "AUTO_INCREMENT"
 				sqlType = "bigint unsigned AUTO_INCREMENT"
 			} else {

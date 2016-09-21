@@ -12,12 +12,12 @@ import (
 	"time"
 
 	"github.com/erikstmartin/go-testdb"
+	"github.com/jinzhu/now"
 	"github.com/nkovacs/gorm"
 	_ "github.com/nkovacs/gorm/dialects/mssql"
 	_ "github.com/nkovacs/gorm/dialects/mysql"
 	"github.com/nkovacs/gorm/dialects/postgres"
 	_ "github.com/nkovacs/gorm/dialects/sqlite"
-	"github.com/jinzhu/now"
 )
 
 var (

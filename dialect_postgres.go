@@ -26,19 +26,25 @@ func (postgres) BindVar(i int) string {
 func (postgres) DataTypeOf(field *StructField) string {
 	var dataValue, sqlType, size, additionalType = ParseFieldStructForDialect(field)
 
+	forceNoIncrement := false
+	if v, ok := field.TagSettings["AUTO_INCREMENT"]; ok && v == "FALSE" {
+		delete(field.TagSettings, "AUTO_INCREMENT")
+		forceNoIncrement = true
+	}
+
 	if sqlType == "" {
 		switch dataValue.Kind() {
 		case reflect.Bool:
 			sqlType = "boolean"
 		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uintptr:
-			if _, ok := field.TagSettings["AUTO_INCREMENT"]; ok || field.IsPrimaryKey {
+			if _, ok := field.TagSettings["AUTO_INCREMENT"]; ok || !forceNoIncrement && field.IsPrimaryKey {
 				field.TagSettings["AUTO_INCREMENT"] = "AUTO_INCREMENT"
 				sqlType = "serial"
 			} else {
 				sqlType = "integer"
 			}
 		case reflect.Int64, reflect.Uint64:
-			if _, ok := field.TagSettings["AUTO_INCREMENT"]; ok || field.IsPrimaryKey {
+			if _, ok := field.TagSettings["AUTO_INCREMENT"]; ok || !forceNoIncrement && field.IsPrimaryKey {
 				field.TagSettings["AUTO_INCREMENT"] = "AUTO_INCREMENT"
 				sqlType = "bigserial"
 			} else {
