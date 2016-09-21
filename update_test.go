@@ -4,7 +4,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/jinzhu/gorm"
+	"github.com/nkovacs/gorm"
 )
 
 func TestUpdate(t *testing.T) {
